@@ -58,6 +58,20 @@
 
 (defonce state (atom nil))
 
+(defn clj-melb-logo []
+  {:impi/key             "logo"
+   :pixi.object/type     :pixi.object.type/sprite
+   :pixi.object/position [300 300]
+   :pixi.sprite/anchor   [0.5 0.5]
+   :pixi.sprite/texture  {:pixi.texture/source "img/clj-melb-logo.png"}})
+
+(defn fireworks! [n-fireworks]
+  {:impi/key         :fireworks
+   :pixi.object/type :pixi.object.type/container
+   :pixi.container/children
+   (vec (for [i (range n-fireworks)]
+          (create-firework! i)))})
+
 (defn init-stage! []
   (reset!
       state
@@ -70,18 +84,8 @@
        {:impi/key         :stage
         :pixi.object/type :pixi.object.type/container
         :pixi.container/children
-        {:logo
-         {:impi/key             "logo"
-          :pixi.object/type     :pixi.object.type/sprite
-          :pixi.object/position [300 300]
-          :pixi.sprite/anchor   [0.5 0.5]
-          :pixi.sprite/texture  {:pixi.texture/source "img/clj-melb-logo.png"}}
-         :fireworks
-         {:impi/key         :fireworks
-          :pixi.object/type :pixi.object.type/container
-          :pixi.container/children
-          (vec (for [i (range 15)]
-                 (create-firework! i)))}}}}))
+        {:logo      (clj-melb-logo)
+         :fireworks (fireworks! 15)}}}))
 
 (defn animate [state]
   (swap! state update-fireworks)
