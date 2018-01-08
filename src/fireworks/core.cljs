@@ -91,12 +91,15 @@
   (swap! state update-fireworks)
   (js/setTimeout #(when (::loop-ms @state) (animate state)) (::loop-ms @state)))
 
-(let [element (.getElementById js/document "app")]
-  (impi/mount :example @state element)
-  (add-watch state ::mount (fn [_ _ _ s] (impi/mount :example s element))))
+(defn mount-state! []
+  (let [element (.getElementById js/document "app")]
+    (impi/mount :example @state element)
+    (add-watch state ::mount (fn [_ _ _ s] (impi/mount :example s element)))))
 
 (defn ^:export start []
-  (when (not @state) (init-stage!))
+  (when (not @state)
+    (do (init-stage!)
+        (mount-state!)))
   (swap! state assoc ::loop-ms 16)
   (animate state))
 
