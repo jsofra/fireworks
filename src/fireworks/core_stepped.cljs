@@ -17,10 +17,18 @@
    :pixi.sprite/anchor   [0.5 0.5]
    :pixi.sprite/texture  {:pixi.texture/source "img/clj-melb-logo.png"}})
 
+(defn spark [pos]
+  {:impi/key             "spark"
+   :pixi.object/type     :pixi.object.type/sprite
+   :pixi.object/position pos
+   :pixi.sprite/anchor   [0.5 0.5]
+   :pixi.sprite/texture  {:pixi.texture/source "img/spark.png"}})
+
 (def stage
   {:impi/key                :stage
    :pixi.object/type        :pixi.object.type/container
-   :pixi.container/children [clj-melb-logo]})
+   :pixi.container/children [clj-melb-logo
+                             (spark [300 150])]})
 
 (def state
   {:pixi/renderer canvas
