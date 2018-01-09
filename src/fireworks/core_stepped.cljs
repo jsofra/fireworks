@@ -10,10 +10,17 @@
    :pixi.renderer/background-color 0x0a1c5e
    :pixi.renderer/transparent?     false})
 
+(def clj-melb-logo
+  {:impi/key             "logo"
+   :pixi.object/type     :pixi.object.type/sprite
+   :pixi.object/position (repeat 2 (/ canvas-size 2))
+   :pixi.sprite/anchor   [0.5 0.5]
+   :pixi.sprite/texture  {:pixi.texture/source "img/clj-melb-logo.png"}})
+
 (def stage
   {:impi/key                :stage
    :pixi.object/type        :pixi.object.type/container
-   :pixi.container/children []})
+   :pixi.container/children [clj-melb-logo]})
 
 (def state
   {:pixi/renderer canvas
