@@ -48,8 +48,16 @@
                              (let [tint (* (Math/random) 0xFFFFFF)]
                                (firework "id" 8 [300 150] 50 tint))]})
 
-(def state
-  {:pixi/renderer canvas
-   :pixi/stage    stage})
+(defonce state (atom nil))
 
-(impi/mount :fireworks state (.getElementById js/document "app"))
+(defn init-state! []
+  (reset! state {:pixi/renderer canvas
+                 :pixi/stage    stage}))
+
+(defn mount-state! []
+  (let [element (.getElementById js/document "app")]
+    (impi/mount :fireworks @state element)
+    (add-watch state ::mount (fn [_ _ _ s] (impi/mount :fireworks s element)))))
+
+(do (init-state!)
+    (mount-state!))
