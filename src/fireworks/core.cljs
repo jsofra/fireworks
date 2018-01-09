@@ -58,6 +58,11 @@
 
 (defonce state (atom nil))
 
+(def canvas
+  {:pixi.renderer/size             [canvas-size canvas-size]
+   :pixi.renderer/background-color 0x0a1c5e
+   :pixi.renderer/transparent?     false})
+
 (defn clj-melb-logo []
   {:impi/key             "logo"
    :pixi.object/type     :pixi.object.type/sprite
@@ -66,26 +71,20 @@
    :pixi.sprite/texture  {:pixi.texture/source "img/clj-melb-logo.png"}})
 
 (defn fireworks! [n-fireworks]
-  {:impi/key         :fireworks
-   :pixi.object/type :pixi.object.type/container
-   :pixi.container/children
-   (vec (for [i (range n-fireworks)]
-          (create-firework! i)))})
+  {:impi/key                :fireworks
+   :pixi.object/type        :pixi.object.type/container
+   :pixi.container/children (vec (for [i (range n-fireworks)]
+                                   (create-firework! i)))})
 
-(defn init-stage! []
-  (reset!
-      state
-      {:pixi/renderer
-       {:pixi.renderer/size             [canvas-size canvas-size]
-        :pixi.renderer/background-color 0x0a1c5e
-        :pixi.renderer/transparent?     false}
-       :pixi/listeners {}
-       :pixi/stage
-       {:impi/key         :stage
-        :pixi.object/type :pixi.object.type/container
-        :pixi.container/children
-        {:logo      (clj-melb-logo)
-         :fireworks (fireworks! 15)}}}))
+(defn stage! []
+  {:impi/key                :stage
+   :pixi.object/type        :pixi.object.type/container
+   :pixi.container/children {:logo      (clj-melb-logo)
+                             :fireworks (fireworks! 15)}})
+
+(defn init-state! []
+  (reset! state {:pixi/renderer canvas
+                 :pixi/stage    (stage!)}))
 
 (defn animate [state]
   (swap! state update-fireworks)
@@ -98,7 +97,7 @@
 
 (defn ^:export start []
   (when (not @state)
-    (do (init-stage!)
+    (do (init-state!)
         (mount-state!)))
   (swap! state assoc ::loop-ms 16)
   (animate state))
