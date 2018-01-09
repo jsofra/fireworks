@@ -18,3 +18,5 @@
 (def state
   {:pixi/renderer canvas
    :pixi/stage    stage})
+
+(impi/mount :fireworks state (.getElementById js/document "app"))
