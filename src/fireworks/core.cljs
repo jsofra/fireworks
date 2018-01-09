@@ -22,8 +22,6 @@
              {:impi/key             (keyword (str "firework_" id "_particle_" i))
               :pixi.object/type     :pixi.object.type/sprite
               :pixi.object/position pos
-              :pixi.object/rotation 0.0
-              :pixi.object/alpha    1.0
               :spark/velocity       (velocity speed n-sparks i)
               :spark/speed          speed
               :pixi.sprite/anchor   [0.5 0.5]
@@ -63,10 +61,10 @@
    :pixi.renderer/background-color 0x0a1c5e
    :pixi.renderer/transparent?     false})
 
-(defn clj-melb-logo []
+(def clj-melb-logo
   {:impi/key             "logo"
    :pixi.object/type     :pixi.object.type/sprite
-   :pixi.object/position [300 300]
+   :pixi.object/position (repeat 2 (/ canvas-size 2))
    :pixi.sprite/anchor   [0.5 0.5]
    :pixi.sprite/texture  {:pixi.texture/source "img/clj-melb-logo.png"}})
 
@@ -79,7 +77,7 @@
 (defn stage! []
   {:impi/key                :stage
    :pixi.object/type        :pixi.object.type/container
-   :pixi.container/children {:logo      (clj-melb-logo)
+   :pixi.container/children {:logo      clj-melb-logo
                              :fireworks (fireworks! 15)}})
 
 (defn init-state! []
@@ -92,8 +90,8 @@
 
 (defn mount-state! []
   (let [element (.getElementById js/document "app")]
-    (impi/mount :example @state element)
-    (add-watch state ::mount (fn [_ _ _ s] (impi/mount :example s element)))))
+    (impi/mount :fireworks @state element)
+    (add-watch state ::mount (fn [_ _ _ s] (impi/mount :fireworks s element)))))
 
 (defn ^:export start []
   (when (not @state)
