@@ -3,7 +3,7 @@
 
 (enable-console-print!)
 
-(defmethod impi/update-prop! :pixi.sprite/tint [object _ _ tint]
+#_(defmethod impi/update-prop! :pixi.sprite/tint [object _ _ tint]
   (set! (.-tint object) tint))
 
 (def canvas-size 600)

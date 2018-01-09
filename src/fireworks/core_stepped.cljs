@@ -18,10 +18,11 @@
    :pixi.sprite/texture  {:pixi.texture/source "img/clj-melb-logo.png"}})
 
 (defn spark [pos]
-  {:impi/key             "spark"
+  {:impi/key              "spark"
    :pixi.object/type     :pixi.object.type/sprite
    :pixi.object/position pos
    :pixi.sprite/anchor   [0.5 0.5]
+   :pixi.sprite/tint     0xFF0000
    :pixi.sprite/texture  {:pixi.texture/source "img/spark.png"}})
 
 (def stage
