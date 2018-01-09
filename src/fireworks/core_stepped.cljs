@@ -29,6 +29,10 @@
      :pixi.sprite/tint     tint
      :pixi.sprite/texture  {:pixi.texture/source "img/spark.png"}}))
 
+(defn direction [fraction]
+  [(Math/cos (* 2 Math/PI fraction))
+   (Math/sin (* 2 Math/PI fraction))])
+
 (def stage
   {:impi/key                :stage
    :pixi.object/type        :pixi.object.type/container
