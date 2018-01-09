@@ -14,3 +14,7 @@
   {:impi/key                :stage
    :pixi.object/type        :pixi.object.type/container
    :pixi.container/children []})
+
+(def state
+  {:pixi/renderer canvas
+   :pixi/stage    stage})
