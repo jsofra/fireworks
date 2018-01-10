@@ -83,8 +83,12 @@
     (impi/mount :fireworks @state element)
     (add-watch state ::mount (fn [_ _ _ s] (impi/mount :fireworks s element)))))
 
+(defn animate! []
+  (swap! state update-fireworks)
+  (js/setTimeout #(animate! state) 16))
+
 (do (init-state!)
     (mount-state!))
 
 (comment
-  (swap! state update-fireworks))
+  (animate!))
