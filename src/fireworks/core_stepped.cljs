@@ -20,11 +20,13 @@
    :pixi.sprite/anchor   [0.5 0.5]
    :pixi.sprite/texture  {:pixi.texture/source "img/clj-melb-logo.png"}})
 
-(defn spark [id pos velocity tint]
-  {:impi/key             id
+(defn spark [firework-id nth-spark pos velocity speed tint]
+  {:impi/key             (str "firework_" firework-id "_spark_" nth-spark)
    :pixi.object/type     :pixi.object.type/sprite
    :pixi.object/position pos
    :spark/velocity       velocity
+   :spark/speed          speed
+   :pixi.object/alpha    1.0
    :pixi.sprite/anchor   [0.5 0.5]
    :pixi.sprite/tint     tint
    :pixi.sprite/texture  {:pixi.texture/source "img/spark.png"}})
@@ -37,11 +39,8 @@
   {:impi/key                (keyword (str "firework_" id))
    :firework/id             id
    :pixi.object/type        :pixi.object.type/container
-   :pixi.container/children (mapv #(spark (str "firework_" id "_particle_" %)
-                                          pos
-                                          (velocity speed n-sparks %)
-                                          tint)
-                                  (range n-sparks))})
+   :pixi.container/children
+   (mapv #(spark id % pos (velocity speed n-sparks %) speed tint) (range n-sparks))})
 
 (defn firework! [id]
   (let [n-sparks (+ 6 (rand-int 16))
@@ -53,8 +52,7 @@
 (defn fireworks! [n-fireworks]
   {:impi/key                :fireworks
    :pixi.object/type        :pixi.object.type/container
-   :pixi.container/children (vec (for [i (range n-fireworks)]
-                                   (firework! i)))})
+   :pixi.container/children (for [i (range n-fireworks)] (firework! i))})
 
 (def stage
   {:impi/key                :stage
@@ -63,10 +61,14 @@
                              :fireworks (fireworks! 15)}})
 
 (defn update-spark [spark]
-  (update spark :pixi.object/position #(map + % (:spark/velocity spark))))
+  (-> spark
+      (update :pixi.object/position #(map + % (:spark/velocity spark)))
+      (update :pixi.object/alpha - (/ 0.05 (:spark/speed spark)))))
 
 (defn update-firework [firework]
-  (update firework :pixi.container/children (partial map update-spark)))
+  (if (<= (-> firework :pixi.container/children first :pixi.object/alpha) 0.0)
+    (firework! (:firework/id firework))
+    (update firework :pixi.container/children (partial map update-spark))))
 
 (defn update-fireworks [state]
   (let [path [:pixi/stage :pixi.container/children :fireworks :pixi.container/children]]
