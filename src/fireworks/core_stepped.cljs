@@ -43,17 +43,24 @@
                                           tint)
                                   (range n-sparks))})
 
-(defn fireworks! []
+(defn firework! [id]
+  (let [n-sparks (+ 6 (rand-int 16))
+        pos      [(rand-int canvas-size) (rand-int canvas-size)]
+        speed    (+ 0.3 (rand 5.0))
+        tint     (* (Math/random) 0xFFFFFF)]
+    (firework id n-sparks pos speed tint)))
+
+(defn fireworks! [n-fireworks]
   {:impi/key                :fireworks
    :pixi.object/type        :pixi.object.type/container
-   :pixi.container/children [(let [tint (* (Math/random) 0xFFFFFF)]
-                               (firework "id" 8 [300 150] 10 tint))]})
+   :pixi.container/children (vec (for [i (range n-fireworks)]
+                                   (firework! i)))})
 
 (def stage
   {:impi/key                :stage
    :pixi.object/type        :pixi.object.type/container
    :pixi.container/children {:logo      clj-melb-logo
-                             :fireworks (fireworks!)}})
+                             :fireworks (fireworks! 15)}})
 
 (defn update-spark [spark]
   (update spark :pixi.object/position #(map + % (:spark/velocity spark))))
