@@ -85,10 +85,19 @@
 
 (defn animate! []
   (swap! state update-fireworks)
-  (js/setTimeout #(animate! state) 16))
+  (js/setTimeout #(when (::loop-ms @state) (animate! state)) (::loop-ms @state)))
 
-(do (init-state!)
-    (mount-state!))
+(defn ^:export start []
+  (when (not @state)
+    (do (init-state!)
+        (mount-state!)))
+  (swap! state assoc ::loop-ms 16)
+  (animate!))
+
+(defn ^:export stop []
+  (swap! state assoc ::loop-ms nil))
 
 (comment
-  (animate!))
+  (reset! state nil)
+  (start)
+  (stop))
