@@ -3,58 +3,10 @@
 
 (enable-console-print!)
 
-(def canvas-size 600)
-
 (defmethod impi/update-prop! :pixi.sprite/tint [object _ _ tint]
   (set! (.-tint object) tint))
 
-(defn velocity [speed n-sparks nth-spark]
-  [(* speed (Math/cos (* 2 Math/PI (/ nth-spark n-sparks))))
-   (* speed (Math/sin (* 2 Math/PI (/ nth-spark n-sparks))))])
-
-(defn create-firework [id n-sparks pos speed]
-  {:impi/key         (keyword (str "firework_" id))
-   :firework/id      id
-   :pixi.object/type :pixi.object.type/container
-   :pixi.container/children
-   (let [tint (* (Math/random) 0xFFFFFF)]
-     (mapv (fn [i]
-             {:impi/key             (keyword (str "firework_" id "_particle_" i))
-              :pixi.object/type     :pixi.object.type/sprite
-              :pixi.object/position pos
-              :spark/velocity       (velocity speed n-sparks i)
-              :spark/speed          speed
-              :pixi.sprite/anchor   [0.5 0.5]
-              :pixi.sprite/tint     tint
-              :pixi.sprite/texture  {:pixi.texture/source "img/spark.png"}})
-           (range n-sparks)))})
-
-(defn create-firework! [id]
-  (let [n-sparks (+ 6 (rand-int 16))
-        pos      [(rand-int canvas-size) (rand-int canvas-size)]
-        speed    (+ 0.3 (rand 5.0))]
-    (create-firework id n-sparks pos speed)))
-
-(defn update-spark [spark]
-  (-> spark
-      (update :pixi.object/position #(map + % (:spark/velocity spark)))
-      (update :pixi.object/alpha - (/ 0.05 (:spark/speed spark)))))
-
-(defn update-children [container update-fn]
-  (update container :pixi.container/children #(map update-fn %)))
-
-(defn update-firework [firework]
-  (if (<= (-> firework :pixi.container/children first :pixi.object/alpha) 0.0)
-    (create-firework! (:firework/id firework))
-    (update-children firework update-spark)))
-
-(defn update-fireworks [state]
-  (update-in state
-             [:pixi/stage :pixi.container/children :fireworks]
-             update-children
-             update-firework))
-
-(defonce state (atom nil))
+(def canvas-size 600)
 
 (def canvas
   {:pixi.renderer/size             [canvas-size canvas-size]
@@ -68,37 +20,81 @@
    :pixi.sprite/anchor   [0.5 0.5]
    :pixi.sprite/texture  {:pixi.texture/source "img/clj-melb-logo.png"}})
 
+(defn spark [firework-id nth-spark pos velocity speed tint]
+  {:impi/key             (str "firework_" firework-id "_spark_" nth-spark)
+   :pixi.object/type     :pixi.object.type/sprite
+   :pixi.object/position pos
+   :spark/velocity       velocity
+   :spark/speed          speed
+   :pixi.object/alpha    1.0
+   :pixi.sprite/anchor   [0.5 0.5]
+   :pixi.sprite/tint     tint
+   :pixi.sprite/texture  {:pixi.texture/source "img/spark.png"}})
+
+(defn velocity [speed n-sparks nth-spark]
+  [(* speed (Math/cos (* 2 Math/PI (/ nth-spark n-sparks))))
+   (* speed (Math/sin (* 2 Math/PI (/ nth-spark n-sparks))))])
+
+(defn firework [id n-sparks pos speed tint]
+  {:impi/key                (keyword (str "firework_" id))
+   :firework/id             id
+   :pixi.object/type        :pixi.object.type/container
+   :pixi.container/children
+   (mapv #(spark id % pos (velocity speed n-sparks %) speed tint) (range n-sparks))})
+
+(defn firework! [id]
+  (let [n-sparks (+ 6 (rand-int 16))
+        pos      [(rand-int canvas-size) (rand-int canvas-size)]
+        speed    (+ 0.3 (rand 5.0))
+        tint     (* (Math/random) 0xFFFFFF)]
+    (firework id n-sparks pos speed tint)))
+
 (defn fireworks! [n-fireworks]
   {:impi/key                :fireworks
    :pixi.object/type        :pixi.object.type/container
-   :pixi.container/children (vec (for [i (range n-fireworks)]
-                                   (create-firework! i)))})
+   :pixi.container/children (for [i (range n-fireworks)] (firework! i))})
 
-(defn stage! []
+(def stage
   {:impi/key                :stage
    :pixi.object/type        :pixi.object.type/container
    :pixi.container/children {:logo      clj-melb-logo
                              :fireworks (fireworks! 15)}})
 
+(defn update-spark [spark]
+  (-> spark
+      (update :pixi.object/position #(map + % (:spark/velocity spark)))
+      (update :pixi.object/alpha - (/ 0.05 (:spark/speed spark)))))
+
+(defn update-firework [firework]
+  (if (<= (-> firework :pixi.container/children first :pixi.object/alpha) 0.0)
+    (firework! (:firework/id firework))
+    (update firework :pixi.container/children (partial map update-spark))))
+
+(defn update-fireworks [state]
+  (let [path [:pixi/stage :pixi.container/children :fireworks :pixi.container/children]]
+    (update-in state path (partial map update-firework))))
+
+(defonce state (atom nil))
+
 (defn init-state! []
   (reset! state {:pixi/renderer canvas
-                 :pixi/stage    (stage!)}))
-
-(defn animate [state]
-  (swap! state update-fireworks)
-  (js/setTimeout #(when (::loop-ms @state) (animate state)) (::loop-ms @state)))
+                 :pixi/stage    stage}))
 
 (defn mount-state! []
   (let [element (.getElementById js/document "app")]
     (impi/mount :fireworks @state element)
     (add-watch state ::mount (fn [_ _ _ s] (impi/mount :fireworks s element)))))
 
+(defn animate! []
+  (swap! state update-fireworks)
+  (js/setTimeout #(when (::loop-ms @state) (animate! state)) (::loop-ms @state)))
+
 (defn ^:export start []
   (when (not @state)
     (do (init-state!)
         (mount-state!)))
   (swap! state assoc ::loop-ms 16)
-  (animate state))
+  (animate!))
 
 (defn ^:export stop []
   (swap! state assoc ::loop-ms nil))
