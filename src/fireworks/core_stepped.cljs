@@ -43,15 +43,27 @@
                                           tint)
                                   (range n-sparks))})
 
+(defn fireworks! []
+  {:impi/key                :fireworks
+   :pixi.object/type        :pixi.object.type/container
+   :pixi.container/children [(let [tint (* (Math/random) 0xFFFFFF)]
+                               (firework "id" 8 [300 150] 10 tint))]})
+
 (def stage
   {:impi/key                :stage
    :pixi.object/type        :pixi.object.type/container
-   :pixi.container/children {:logo     clj-melb-logo
-                             :firework (let [tint (* (Math/random) 0xFFFFFF)]
-                                         (firework "id" 8 [300 150] 10 tint))}})
+   :pixi.container/children {:logo      clj-melb-logo
+                             :fireworks (fireworks!)}})
 
 (defn update-spark [spark]
   (update spark :pixi.object/position #(map + % (:spark/velocity spark))))
+
+(defn update-firework [firework]
+  (update firework :pixi.container/children (partial map update-spark)))
+
+(defn update-fireworks [state]
+  (let [path [:pixi/stage :pixi.container/children :fireworks :pixi.container/children]]
+    (update-in state path (partial map update-firework))))
 
 (defonce state (atom nil))
 
@@ -68,10 +80,4 @@
     (mount-state!))
 
 (comment
-  (swap! state
-         update-in
-         [:pixi/stage
-          :pixi.container/children
-          :firework
-          :pixi.container/children]
-         (partial mapv update-spark)))
+  (swap! state update-fireworks))
