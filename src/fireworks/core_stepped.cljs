@@ -20,10 +20,11 @@
    :pixi.sprite/anchor   [0.5 0.5]
    :pixi.sprite/texture  {:pixi.texture/source "img/clj-melb-logo.png"}})
 
-(defn spark [id pos tint]
+(defn spark [id pos velocity tint]
   {:impi/key             id
    :pixi.object/type     :pixi.object.type/sprite
    :pixi.object/position pos
+   :spark/velocity       velocity
    :pixi.sprite/anchor   [0.5 0.5]
    :pixi.sprite/tint     tint
    :pixi.sprite/texture  {:pixi.texture/source "img/spark.png"}})
@@ -37,16 +38,20 @@
    :firework/id             id
    :pixi.object/type        :pixi.object.type/container
    :pixi.container/children (mapv #(spark (str "firework_" id "_particle_" %)
-                                          (mapv + pos (velocity speed n-sparks %))
+                                          pos
+                                          (velocity speed n-sparks %)
                                           tint)
                                   (range n-sparks))})
 
 (def stage
   {:impi/key                :stage
    :pixi.object/type        :pixi.object.type/container
-   :pixi.container/children [clj-melb-logo
-                             (let [tint (* (Math/random) 0xFFFFFF)]
-                               (firework "id" 8 [300 150] 50 tint))]})
+   :pixi.container/children {:logo     clj-melb-logo
+                             :firework (let [tint (* (Math/random) 0xFFFFFF)]
+                                         (firework "id" 8 [300 150] 10 tint))}})
+
+(defn update-spark [spark]
+  (update spark :pixi.object/position #(map + % (:spark/velocity spark))))
 
 (defonce state (atom nil))
 
@@ -61,3 +66,12 @@
 
 (do (init-state!)
     (mount-state!))
+
+(comment
+  (swap! state
+         update-in
+         [:pixi/stage
+          :pixi.container/children
+          :firework
+          :pixi.container/children]
+         (partial mapv update-spark)))
